@@ -32,7 +32,7 @@ const JapanTravelAssistant = () => {
       type: "video",
       media:
         "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&h=400&fit=crop&auto=format",
-      videoUrl: "https://youtu.be/oNcN0ilrC9g",
+      videoUrl: "https://cdn.pixabay.com/video/2024/11/11/240841_large.mp4",
       fallback: "from-orange-400 to-pink-500",
     },
     {
