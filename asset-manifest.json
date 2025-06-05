@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/japan-travel-starter/static/css/main.f9e27d8d.css",
-    "main.js": "/japan-travel-starter/static/js/main.97faf7a0.js",
+    "main.css": "/japan-travel-starter/static/css/main.3008d87c.css",
+    "main.js": "/japan-travel-starter/static/js/main.ffaf1d7c.js",
     "index.html": "/japan-travel-starter/index.html",
-    "main.f9e27d8d.css.map": "/japan-travel-starter/static/css/main.f9e27d8d.css.map",
-    "main.97faf7a0.js.map": "/japan-travel-starter/static/js/main.97faf7a0.js.map"
+    "main.3008d87c.css.map": "/japan-travel-starter/static/css/main.3008d87c.css.map",
+    "main.ffaf1d7c.js.map": "/japan-travel-starter/static/js/main.ffaf1d7c.js.map"
   },
   "entrypoints": [
-    "static/css/main.f9e27d8d.css",
-    "static/js/main.97faf7a0.js"
+    "static/css/main.3008d87c.css",
+    "static/js/main.ffaf1d7c.js"
   ]
 }
