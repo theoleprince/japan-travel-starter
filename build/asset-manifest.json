@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/japan-travel-starter/static/css/main.d68f4195.css",
+    "main.js": "/japan-travel-starter/static/js/main.2bf4980a.js",
+    "index.html": "/japan-travel-starter/index.html",
+    "main.d68f4195.css.map": "/japan-travel-starter/static/css/main.d68f4195.css.map",
+    "main.2bf4980a.js.map": "/japan-travel-starter/static/js/main.2bf4980a.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.d68f4195.css",
+    "static/js/main.2bf4980a.js"
+  ]
+}

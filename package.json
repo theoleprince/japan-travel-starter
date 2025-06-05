@@ -1,9 +1,10 @@
 {
-  "name": "react-tailwind-starter",
+  "name": "japan-travel-starter",
   "version": "0.1.0",
   "private": true,
   "homepage": "https://theoleprince.github.io/japan-travel-starter/",
   "dependencies": {
+    "japan-travel-starter": "file:",
     "lucide-react": "^0.511.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

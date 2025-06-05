@@ -32,8 +32,7 @@ const JapanTravelAssistant = () => {
       type: "video",
       media:
         "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&h=400&fit=crop&auto=format",
-      videoUrl:
-        "https://player.vimeo.com/video/458673375?autoplay=0&loop=1&title=0&byline=0&portrait=0",
+      videoUrl: "https://youtu.be/oNcN0ilrC9g",
       fallback: "from-orange-400 to-pink-500",
     },
     {
@@ -1191,11 +1190,25 @@ Veuillez réessayer dans quelques instants.`;
 
             <button
               onClick={nextStep}
-              className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white py-4 px-8 rounded-2xl font-bold text-lg hover:from-orange-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-xl flex items-center justify-center gap-3"
+              disabled={isLoading}
+              className={`w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white py-4 px-8 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl flex items-center justify-center gap-3 ${
+                isLoading
+                  ? "opacity-75 cursor-not-allowed"
+                  : "hover:from-orange-600 hover:to-pink-600 transform hover:scale-105"
+              }`}
             >
-              <Zap className="w-5 h-5" />
-              Créer mon itinéraire magique
-              <Zap className="w-5 h-5" />
+              {isLoading ? (
+                <>
+                  <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+                  <span>Création en cours...</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="w-5 h-5" />
+                  Créer mon itinéraire magique
+                  <Zap className="w-5 h-5" />
+                </>
+              )}
             </button>
           </div>
         );
@@ -1335,5 +1348,4 @@ Veuillez réessayer dans quelques instants.`;
     </div>
   );
 };
-
 export default JapanTravelAssistant;
