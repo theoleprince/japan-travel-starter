@@ -30,12 +30,18 @@ const JapanTravelAssistant = () => {
   const [generatedItinerary, setGeneratedItinerary] = useState("");
   const [apiError, setApiError] = useState("");
 
-  // États IA & Personnalisation
+  // IA & Personnalisation
   const [showAIChat, setShowAIChat] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [aiRecommendations, setAiRecommendations] = useState([]);
   const [smartSuggestions, setSmartSuggestions] = useState([]);
+  const [userProfile, setUserProfile] = useState({
+    preferences: [],
+    travelStyle: "",
+    experienceLevel: "",
+    budget: "",
+  });
 
   const steps = [
     {
@@ -45,6 +51,8 @@ const JapanTravelAssistant = () => {
       type: "video",
       media:
         "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&h=400&fit=crop&auto=format",
+      videoUrl:
+        "https://player.vimeo.com/video/458673375?autoplay=0&loop=1&title=0&byline=0&portrait=0",
       fallback: "from-orange-400 to-pink-500",
     },
     {
@@ -130,6 +138,14 @@ const JapanTravelAssistant = () => {
           fallback: "from-purple-400 to-indigo-500",
         },
         {
+          id: "professionnel",
+          title: "Professionnel",
+          description: "Voyages optimisés pour le travail",
+          image:
+            "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=300&h=200&fit=crop&auto=format",
+          fallback: "from-gray-400 to-slate-500",
+        },
+        {
           id: "authentique",
           title: "Authentique",
           description: "Vivre comme un local",
@@ -144,6 +160,14 @@ const JapanTravelAssistant = () => {
           image:
             "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=300&h=200&fit=crop&auto=format",
           fallback: "from-rose-400 to-pink-500",
+        },
+        {
+          id: "hors des sentiers battus",
+          title: "Hors des Sentiers Battus",
+          description: "Découvertes secrètes",
+          image:
+            "https://images.unsplash.com/photo-1480796927426-f609979314bd?w=300&h=200&fit=crop&auto=format",
+          fallback: "from-teal-400 to-cyan-500",
         },
         {
           id: "luxe",
@@ -186,12 +210,36 @@ const JapanTravelAssistant = () => {
           emoji: "🌸",
         },
         {
+          id: "musées",
+          title: "Musées",
+          image:
+            "https://images.unsplash.com/photo-1554907984-15263bfd63bd?w=300&h=200&fit=crop&auto=format",
+          color: "from-purple-400 to-pink-500",
+          emoji: "🏛️",
+        },
+        {
           id: "artisanat",
           title: "Arts & Artisanat",
           image:
             "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop&auto=format",
           color: "from-indigo-400 to-purple-500",
           emoji: "🎨",
+        },
+        {
+          id: "manga",
+          title: "Manga & Culture Pop",
+          image:
+            "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=300&h=200&fit=crop&auto=format",
+          color: "from-pink-400 to-purple-500",
+          emoji: "🎌",
+        },
+        {
+          id: "spiritualité",
+          title: "Méditation",
+          image:
+            "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=200&fit=crop&auto=format",
+          color: "from-cyan-400 to-blue-500",
+          emoji: "🧘",
         },
       ],
     },
@@ -231,6 +279,30 @@ const JapanTravelAssistant = () => {
       ],
     },
     {
+      id: "experience",
+      title: "Êtes-vous déjà allé au Japon ?",
+      subtitle: "Adaptation de nos recommandations",
+      type: "experience-choice",
+      options: [
+        {
+          id: "oui",
+          title: "Oui, j'y suis déjà allé",
+          description: "Montrez-moi des expériences spécialisées",
+          image:
+            "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400&h=200&fit=crop&auto=format",
+          fallback: "from-purple-400 to-pink-500",
+        },
+        {
+          id: "non",
+          title: "Non, c'est ma première fois",
+          description: "Guide vers les incontournables",
+          image:
+            "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=400&h=200&fit=crop&auto=format",
+          fallback: "from-orange-400 to-red-500",
+        },
+      ],
+    },
+    {
       id: "details",
       title: "Détails finaux",
       subtitle: "Personnalisons votre expérience",
@@ -242,10 +314,11 @@ const JapanTravelAssistant = () => {
   const isLastStep = currentStep === steps.length - 1;
   const isFirstStep = currentStep === 0;
 
-  // IA - Génération de suggestions intelligentes
+  // IA & Recommandations Dynamiques
   const generateSmartSuggestions = (currentAnswers) => {
     const suggestions = [];
 
+    // Analyse des réponses pour suggestions intelligentes
     if (
       currentAnswers.mode === "complet" &&
       currentAnswers.type === "famille"
@@ -253,7 +326,7 @@ const JapanTravelAssistant = () => {
       suggestions.push({
         type: "destination",
         title: "Tokyo Disneyland recommandé",
-        reason: "Parfait pour les familles avec enfants",
+        reason: "Perfect pour les familles avec enfants",
         confidence: 95,
         icon: "🎢",
       });
@@ -266,19 +339,36 @@ const JapanTravelAssistant = () => {
       suggestions.push({
         type: "experience",
         title: "Cérémonie du thé traditionnelle",
-        reason: "Allié parfaitement à votre style authentique",
+        reason:
+          "Allié parfaitement à votre style authentique et rythme tranquille",
         confidence: 88,
         icon: "🍵",
       });
     }
 
-    if (currentAnswers.interests?.includes("nature")) {
+    if (
+      currentAnswers.interests?.includes("nature") &&
+      currentAnswers.mode === "complet"
+    ) {
       suggestions.push({
         type: "destination",
         title: "Mont Fuji et lac Kawaguchi",
         reason: "Incontournable pour les amoureux de nature",
         confidence: 92,
         icon: "🗻",
+      });
+    }
+
+    if (
+      currentAnswers.type === "couple" &&
+      currentAnswers.style?.includes("luxe")
+    ) {
+      suggestions.push({
+        type: "accommodation",
+        title: "Ryokan traditionnel haut de gamme",
+        reason: "Expérience romantique et luxueuse",
+        confidence: 90,
+        icon: "🏯",
       });
     }
 
@@ -296,12 +386,14 @@ const JapanTravelAssistant = () => {
         }
         if (currentAnswers.style?.includes("authentique")) {
           recommendations.push("Marchés locaux matinaux");
+          recommendations.push("Séjour chez l'habitant");
         }
         break;
 
       case "style":
         if (currentAnswers.type === "famille") {
           recommendations.push("Parcs à thème et aquariums");
+          recommendations.push("Musées interactifs");
         }
         break;
 
@@ -312,41 +404,161 @@ const JapanTravelAssistant = () => {
     return recommendations;
   };
 
-  const handleAIChat = (message) => {
+  const handleAIChat = async (message) => {
     setChatMessages((prev) => [...prev, { type: "user", content: message }]);
     setChatInput("");
 
+    // Simulation réponse IA (remplacer par vraie API)
     setTimeout(() => {
       let aiResponse = "";
 
       if (message.toLowerCase().includes("budget")) {
         aiResponse =
-          "Pour un voyage au Japon, je recommande 100-150€/jour pour un budget moyen. Cela inclut hébergement, repas et transports locaux.";
+          "Pour un voyage au Japon, je recommande 100-150€/jour pour un budget moyen. Cela inclut hébergement, repas et transports locaux. Voulez-vous des détails sur une catégorie spécifique ?";
       } else if (message.toLowerCase().includes("saison")) {
         aiResponse =
-          "Le printemps (mars-mai) et l'automne (septembre-novembre) sont idéaux ! Évitez juillet-août (très chaud et humide).";
+          "Le printemps (mars-mai) et l'automne (septembre-novembre) sont idéaux ! Évitez juillet-août (très chaud et humide). Quelle période vous intéresse ?";
       } else if (message.toLowerCase().includes("transport")) {
         aiResponse =
-          "Le JR Pass est parfait pour les circuits multi-villes. Pour Tokyo uniquement, privilégiez la carte Suica.";
+          "Le JR Pass est parfait pour les circuits multi-villes. Pour Tokyo uniquement, privilégiez la carte Suica. Besoin d'aide pour choisir ?";
       } else {
         aiResponse =
-          "Excellente question ! Je peux vous aider avec les détails sur le Japon. N'hésitez pas à être plus spécifique.";
+          "Excellente question ! Je peux vous aider avec les détails sur le Japon. N'hésitez pas à être plus spécifique sur ce qui vous intéresse.";
       }
 
       setChatMessages((prev) => [...prev, { type: "ai", content: aiResponse }]);
     }, 1000);
   };
 
-  // Mise à jour des suggestions quand les réponses changent
+  // Mise à jour du profil utilisateur et suggestions
   useEffect(() => {
     const suggestions = generateSmartSuggestions(answers);
     setSmartSuggestions(suggestions);
 
     const recommendations = getAIRecommendations(currentStepData?.id, answers);
     setAiRecommendations(recommendations);
+
+    // Mise à jour profil utilisateur
+    setUserProfile((prev) => ({
+      ...prev,
+      preferences: answers.interests || [],
+      travelStyle: answers.style?.[0] || "",
+      experienceLevel: answers.deja || "",
+      budget: answers.budget || "",
+    }));
   }, [answers, currentStep]);
 
-  // Composant d'image avec fallback
+  // Fonction pour obtenir les informations météo selon la date
+  const getIntroHtmlFromDate = (dateStr) => {
+    if (!dateStr) return "";
+
+    const date = new Date(dateStr);
+    const mois = date.getMonth();
+    if (isNaN(mois)) return "";
+
+    const moisNom = [
+      "janvier",
+      "février",
+      "mars",
+      "avril",
+      "mai",
+      "juin",
+      "juillet",
+      "août",
+      "septembre",
+      "octobre",
+      "novembre",
+      "décembre",
+    ][mois];
+
+    const meteo = {
+      0: {
+        t: "0-10°C",
+        icon: "❄️",
+        tips: "Prévoir vêtements chauds et imperméables.",
+      },
+      1: { t: "3-12°C", icon: "🌬️", tips: "Encore froid. Restez couvert." },
+      2: { t: "6-15°C", icon: "🌱", tips: "Premiers signes du printemps." },
+      3: { t: "10-20°C", icon: "🌸", tips: "Saison des cerisiers en fleurs." },
+      4: {
+        t: "15-25°C",
+        icon: "🌤️",
+        tips: "Températures douces et floraisons.",
+      },
+      5: { t: "18-27°C", icon: "🌦️", tips: "Début de la saison des pluies." },
+      6: { t: "23-32°C", icon: "🌞", tips: "Chaleur et humidité marquées." },
+      7: { t: "25-33°C", icon: "☀️", tips: "Très chaud, bien s'hydrater." },
+      8: { t: "22-30°C", icon: "🍂", tips: "Fin de l'été, premiers typhons." },
+      9: {
+        t: "17-25°C",
+        icon: "🍁",
+        tips: "Temps agréable, début de l'automne.",
+      },
+      10: {
+        t: "10-20°C",
+        icon: "🍂",
+        tips: "Feuilles rouges, frais le matin.",
+      },
+      11: { t: "5-12°C", icon: "🎄", tips: "Froid sec, fêtes lumineuses." },
+    }[mois];
+
+    if (!meteo) return "";
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-2xl border border-blue-200">
+          <h3 className="text-lg font-bold text-blue-800 mb-3 flex items-center gap-2">
+            {meteo.icon} Météo en {moisNom}
+          </h3>
+          <div className="space-y-2 text-sm text-blue-700">
+            <div>Températures moyennes : {meteo.t}</div>
+            <div>{meteo.tips}</div>
+            <div>Vêtements : couches légères + pull / veste</div>
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-2xl border border-green-200">
+          <h3 className="text-lg font-bold text-green-800 mb-3 flex items-center gap-2">
+            🚆 Transport
+          </h3>
+          <div className="space-y-2 text-sm text-green-700">
+            <div>
+              <strong>Japan Rail Pass</strong> : achetez avant le départ
+            </div>
+            <div>
+              <strong>Hakone Pass</strong> ou <strong>Kamakura Pass</strong>
+            </div>
+            <div>
+              <strong>IC Cards</strong> : Suica, Pasmo (métro / achats)
+            </div>
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-2xl border border-orange-200">
+          <h3 className="text-lg font-bold text-orange-800 mb-3 flex items-center gap-2">
+            💡 Conseils pratiques
+          </h3>
+          <div className="space-y-2 text-sm text-orange-700">
+            <div>
+              <strong>Devise</strong> : yen (¥), prévoir du liquide
+            </div>
+            <div>
+              <strong>Internet</strong> : pocket WiFi ou carte SIM
+            </div>
+            <div>
+              <strong>Électricité</strong> : 100V Type A / B
+            </div>
+            <div>
+              <strong>Langue</strong> : appli de traduction utile
+            </div>
+            <div>
+              <strong>Étiquette</strong> : pas de pourboire, déchaussage
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Composant d'image avec fallback coloré
   const ImageWithFallback = ({
     src,
     alt,
@@ -455,7 +667,7 @@ const JapanTravelAssistant = () => {
   // Composant Suggestions Intelligentes
   const SmartSuggestions = () =>
     smartSuggestions.length > 0 && (
-      <div className="fixed top-20 right-6 w-72 bg-white/95 backdrop-blur rounded-2xl shadow-xl border border-orange-200 p-4 z-40">
+      <div className="fixed top-20 right-6 w-72 bg-white/95 backdrop-blur rounded-2xl shadow-xl border border-orange-200 p-4 z-40 animate-pulse">
         <div className="flex items-center gap-2 mb-3">
           <Lightbulb className="w-5 h-5 text-orange-500" />
           <span className="font-semibold text-gray-800">Suggestions IA</span>
@@ -496,6 +708,9 @@ const JapanTravelAssistant = () => {
       className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full shadow-lg hover:scale-110 transition-all duration-300 flex items-center justify-center z-50"
     >
       <MessageCircle className="w-6 h-6" />
+      {chatMessages.some((msg) => msg.type === "ai" && !msg.read) && (
+        <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-bounce"></div>
+      )}
     </button>
   );
 
@@ -513,7 +728,7 @@ const JapanTravelAssistant = () => {
         newAnswers[key] = value;
       }
 
-      // Génération de suggestions basées sur la nouvelle réponse
+      // Génération immédiate de suggestions basées sur la nouvelle réponse
       setTimeout(() => {
         const newSuggestions = generateSmartSuggestions(newAnswers);
         setSmartSuggestions(newSuggestions);
@@ -525,6 +740,7 @@ const JapanTravelAssistant = () => {
             {
               type: "ai",
               content: `💡 J'ai une suggestion parfaite pour vous : ${newSuggestions[0].title}! ${newSuggestions[0].reason}`,
+              timestamp: Date.now(),
             },
           ]);
         }
@@ -548,37 +764,135 @@ const JapanTravelAssistant = () => {
     }
   };
 
-  const generateItinerary = () => {
+  const generateItinerary = async () => {
     setIsLoading(true);
     setApiError("");
 
-    // Simulation de génération d'itinéraire
-    setTimeout(() => {
-      const itinerary = `# Votre Voyage au Japon
+    try {
+      // Préparer les données au format attendu par l'API
+      const apiData = {
+        username: answers.username || "voyageur",
+        mode: answers.mode || "complet",
+        type: answers.type || "solo",
+        style: Array.isArray(answers.style)
+          ? answers.style
+          : [answers.style].filter(Boolean),
+        rythme: answers.rythme || "modéré",
+        deja: answers.deja || "non",
+        interests: Array.isArray(answers.interests) ? answers.interests : [],
+        remarques: answers.remarques || "",
+        conclusion: answers.conclusion || "non",
+      };
 
-## Pour ${answers.username || "voyageur"}
+      // Ajouter les champs spécifiques selon le mode
+      if (answers.mode === "complet") {
+        apiData.start = answers.start || "";
+        apiData.duration = answers.duration || "7";
+        apiData.budget = answers.budget || "";
+        apiData.villesSouhaitees =
+          answers.villesSouhaitees || "Tokyo, Kyoto, Osaka";
+        apiData.lieuxAeviter = answers.lieuxAeviter || "";
+      } else if (answers.mode === "ville") {
+        apiData.ville = answers.ville || "Tokyo";
+        apiData.periodeVille = answers.periodeVille || "";
+        apiData.joursVille = answers.joursVille || "3";
+      }
+
+      console.log("Données envoyées à l'API:", apiData);
+
+      const response = await fetch(
+        "https://assistant-voyage-japon.onrender.com/api/planificateur",
+        {
+          method: "POST",
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(apiData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("Réponse de l'API:", result);
+
+      if (result && result.result) {
+        setGeneratedItinerary(result.result);
+        setShowResult(true);
+      } else {
+        throw new Error("Format de réponse inattendu de l'API");
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'appel à l'API:", error);
+      setApiError(`Erreur: ${error.message}`);
+
+      // Fallback avec un itinéraire générique en cas d'erreur
+      const fallbackItinerary = `# Erreur de connexion
+
+Nous rencontrons actuellement des difficultés pour générer votre itinéraire personnalisé.
+
+## En attendant, voici quelques suggestions générales :
+
+### Pour ${answers.username || "votre voyage"} au Japon
 
 **Type de voyage :** ${answers.type || "À définir"}
-**Style :** ${answers.style?.join(", ") || "À définir"}
 **Rythme :** ${answers.rythme || "À définir"}
+**Durée :** ${answers.duration || answers.joursVille || "À définir"} jours
 
-### Jour 1 - Arrivée à Tokyo
-- **Matin** : Arrivée à l'aéroport de Narita
-- **Après-midi** : Installation à l'hôtel à Shibuya
-- **Soir** : Première exploration du quartier
+### Destinations recommandées :
+- **Tokyo** : Moderne et traditionnel
+- **Kyoto** : Temples et culture
+- **Osaka** : Gastronomie
+- **Nara** : Cerfs et temples
 
-### Jour 2 - Tokyo Traditionnel
-- **Matin** : Visite du temple Sensoji à Asakusa
-- **Midi** : Déjeuner dans un restaurant traditionnel
-- **Après-midi** : Promenade dans les jardins impériaux
-- **Soir** : Dîner à Ginza
+Veuillez réessayer dans quelques instants.`;
 
-Votre itinéraire a été personnalisé selon vos préférences !`;
-
-      setGeneratedItinerary(itinerary);
+      setGeneratedItinerary(fallbackItinerary);
       setShowResult(true);
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
+  };
+
+  // Fonction pour convertir le markdown en HTML simple
+  const formatMarkdownToHTML = (markdown) => {
+    return markdown
+      .replace(
+        /^# (.*$)/gm,
+        '<h1 class="text-3xl font-bold text-orange-600 mb-6">$1</h1>'
+      )
+      .replace(
+        /^## (.*$)/gm,
+        '<h2 class="text-2xl font-bold text-orange-600 mt-8 mb-4">$1</h2>'
+      )
+      .replace(
+        /^### (.*$)/gm,
+        '<h3 class="text-lg font-semibold text-gray-800 mt-6 mb-3">$1</h3>'
+      )
+      .replace(
+        /\*\*(.*?)\*\*/g,
+        '<strong class="font-semibold text-orange-700">$1</strong>'
+      )
+      .replace(/^- (.*$)/gm, '<li class="ml-4 mb-1 text-gray-700">$1</li>')
+      .replace(/### 🍵 Matin/g, "### 🍵 Matin")
+      .replace(/### 🍽️ Midi/g, "### 🍽️ Midi")
+      .replace(/### ☀️ Après-midi/g, "### ☀️ Après-midi")
+      .replace(/### 🌙 Soir/g, "### 🌙 Soir")
+      .split("\n\n")
+      .map((paragraph) => {
+        if (paragraph.includes("<li")) {
+          return `<ul class="list-disc list-inside mb-4 space-y-1">${paragraph}</ul>`;
+        } else if (paragraph.includes("<h")) {
+          return paragraph;
+        } else if (paragraph.trim()) {
+          return `<p class="mb-4 leading-relaxed text-gray-700">${paragraph}</p>`;
+        }
+        return "";
+      })
+      .join("");
   };
 
   const renderStep = () => {
@@ -591,9 +905,7 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
                 <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-pink-500 rounded-xl flex items-center justify-center">
                   <Mountain className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-xl font-bold text-gray-800">
-                  JapanGo IA
-                </span>
+                <span className="text-xl font-bold text-gray-800">JapanGo</span>
               </div>
               <div className="flex items-center space-x-4">
                 <Search className="w-6 h-6 text-gray-600" />
@@ -602,22 +914,45 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
             </div>
 
             <div className="relative rounded-3xl overflow-hidden shadow-2xl max-w-4xl mx-auto border border-gray-200">
-              <ImageWithFallback
-                src={currentStepData.media}
-                alt="Japan intro"
-                className="w-full h-96 object-cover"
-                fallback={currentStepData.fallback}
-                emoji="🏮"
-              />
+              {isPlaying ? (
+                <iframe
+                  src={currentStepData.videoUrl}
+                  className="w-full h-96"
+                  frameBorder="0"
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  allowFullScreen
+                  title="Japan Travel Video"
+                />
+              ) : (
+                <>
+                  <ImageWithFallback
+                    src={currentStepData.media}
+                    alt="Japan intro"
+                    className="w-full h-96 object-cover"
+                    fallback={currentStepData.fallback}
+                    emoji="🏮"
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                    <button
+                      onClick={() => setIsPlaying(!isPlaying)}
+                      className="w-20 h-20 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full flex items-center justify-center hover:scale-110 transition-all duration-300 shadow-2xl"
+                    >
+                      <Play className="w-8 h-8 text-white ml-1" />
+                    </button>
+                  </div>
+                </>
+              )}
 
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent p-8">
-                <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
-                  {currentStepData.title}
-                </h1>
-                <p className="text-xl text-gray-200 drop-shadow">
-                  {currentStepData.subtitle}
-                </p>
-              </div>
+              {!isPlaying && (
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent p-8">
+                  <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
+                    {currentStepData.title}
+                  </h1>
+                  <p className="text-xl text-gray-200 drop-shadow">
+                    {currentStepData.subtitle}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-8">
@@ -626,7 +961,7 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
                   { emoji: "🗾", text: "Culture ancienne" },
                   { emoji: "🍜", text: "Cuisine unique" },
                   { emoji: "🌸", text: "Beauté naturelle" },
-                  { emoji: "🤖", text: "Assistant IA" },
+                  { emoji: "🏮", text: "Traditions vivantes" },
                 ].map((item, index) => (
                   <div key={index} className="text-center group">
                     <div className="text-4xl mb-3 group-hover:scale-125 transition-transform duration-300">
@@ -643,7 +978,7 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
                 onClick={nextStep}
                 className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-12 py-4 rounded-2xl text-lg font-semibold hover:from-orange-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-xl flex items-center gap-3 mx-auto"
               >
-                Commencer avec l'IA <ArrowRight className="w-5 h-5" />
+                Commencer mon voyage <ArrowRight className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -662,7 +997,7 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
             </div>
 
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {currentStepData.options.map((option) => (
+              {currentStepData.options.map((option, index) => (
                 <div
                   key={option.id}
                   onClick={() => {
@@ -682,7 +1017,7 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
 
                   <div className="absolute inset-0 flex flex-col justify-end p-8">
                     <div
-                      className={`w-16 h-16 bg-gradient-to-r ${option.gradient} rounded-2xl flex items-center justify-center mb-4 shadow-lg`}
+                      className={`w-16 h-16 bg-gradient-to-r ${option.gradient} rounded-2xl flex items-center justify-center mb-4 transform group-hover:rotate-12 transition-transform duration-300 shadow-lg`}
                     >
                       <option.icon className="w-8 h-8 text-white" />
                     </div>
@@ -693,6 +1028,11 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
                     <p className="text-gray-200 text-lg drop-shadow">
                       {option.description}
                     </p>
+
+                    <div className="mt-4 flex items-center text-orange-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span>Choisissez cette option</span>
+                      <ArrowRight className="w-5 h-5 ml-2" />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -713,7 +1053,7 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-              {currentStepData.options.map((option) => (
+              {currentStepData.options.map((option, index) => (
                 <div
                   key={option.id}
                   onClick={() => {
@@ -758,8 +1098,8 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
               </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-              {currentStepData.options.map((option) => {
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-6xl mx-auto">
+              {currentStepData.options.map((option, index) => {
                 const isSelected = answers.style?.includes(option.id);
                 return (
                   <div
@@ -822,13 +1162,13 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
                 {currentStepData.subtitle}
               </p>
 
-              {/* Recommandations IA */}
+              {/* Recommandations IA dynamiques */}
               {aiRecommendations.length > 0 && (
                 <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-2xl border border-purple-200 max-w-2xl mx-auto">
                   <div className="flex items-center gap-2 mb-2">
                     <Bot className="w-5 h-5 text-purple-600" />
                     <span className="font-semibold text-purple-800">
-                      Recommandations IA
+                      Recommandations IA pour vous
                     </span>
                   </div>
                   <div className="text-sm text-purple-700 space-y-1">
@@ -843,9 +1183,10 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
               )}
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-              {currentStepData.options.map((option) => {
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-6xl mx-auto">
+              {currentStepData.options.map((option, index) => {
                 const isSelected = answers.interests?.includes(option.id);
+                // Vérification si cette option est recommandée par l'IA
                 const isAIRecommended = aiRecommendations.some((rec) =>
                   rec
                     .toLowerCase()
@@ -925,7 +1266,7 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
             </div>
 
             <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {currentStepData.options.map((option) => (
+              {currentStepData.options.map((option, index) => (
                 <div
                   key={option.id}
                   onClick={() => {
@@ -961,6 +1302,51 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
           </div>
         );
 
+      case "experience-choice":
+        return (
+          <div className="space-y-12">
+            <div className="text-center space-y-4">
+              <h2 className="text-4xl font-bold text-gray-800">
+                {currentStepData.title}
+              </h2>
+              <p className="text-xl text-gray-600">
+                {currentStepData.subtitle}
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {currentStepData.options.map((option, index) => (
+                <div
+                  key={option.id}
+                  onClick={() => {
+                    handleAnswer("deja", option.id);
+                    setTimeout(nextStep, 500);
+                  }}
+                  className="group cursor-pointer relative overflow-hidden rounded-3xl h-64 transform hover:scale-105 transition-all duration-500 bg-white/90 backdrop-blur border border-gray-200 hover:border-orange-400 shadow-lg hover:shadow-xl"
+                >
+                  <ImageWithFallback
+                    src={option.image}
+                    alt={option.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    fallback={option.fallback}
+                  />
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+
+                  <div className="absolute inset-0 flex flex-col justify-end p-6">
+                    <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-lg">
+                      {option.title}
+                    </h3>
+                    <p className="text-gray-200 drop-shadow">
+                      {option.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
       case "form":
         return (
           <div className="space-y-12 max-w-2xl mx-auto">
@@ -973,33 +1359,123 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
               </p>
             </div>
 
-            <div className="bg-white rounded-3xl p-8 space-y-6 border border-gray-200 shadow-lg">
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Prénom
-                </label>
-                <input
-                  type="text"
-                  value={answers.username || ""}
-                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-2xl text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all duration-200"
-                  placeholder="Votre prénom"
-                  onChange={(e) => handleAnswer("username", e.target.value)}
-                />
+            <div className="bg-white/90 backdrop-blur rounded-3xl p-8 space-y-6 border border-gray-200 shadow-lg">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-gray-700 font-medium mb-2">
+                    Prénom
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-2xl text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                    placeholder="Votre prénom"
+                    onChange={(e) => handleAnswer("username", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-medium mb-2">
+                    Durée (jours)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-2xl text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                    placeholder="Ex : 10"
+                    onChange={(e) =>
+                      handleAnswer(
+                        answers.mode === "complet" ? "duration" : "joursVille",
+                        e.target.value
+                      )
+                    }
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Durée (jours)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={answers.duration || ""}
-                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-2xl text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all duration-200"
-                  placeholder="Ex : 10"
-                  onChange={(e) => handleAnswer("duration", e.target.value)}
-                />
-              </div>
+              {answers.mode === "complet" && (
+                <>
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Date d'arrivée au Japon
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-2xl text-gray-800 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                      onChange={(e) => handleAnswer("start", e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Budget estimé (€)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-2xl text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                      placeholder="Total du voyage"
+                      onChange={(e) => handleAnswer("budget", e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Villes à inclure
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-2xl text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                      placeholder="Tokyo, Kyoto..."
+                      onChange={(e) =>
+                        handleAnswer("villesSouhaitees", e.target.value)
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Villes à éviter
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-2xl text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                      placeholder="Optionnel"
+                      onChange={(e) =>
+                        handleAnswer("lieuxAeviter", e.target.value)
+                      }
+                    />
+                  </div>
+                </>
+              )}
+
+              {answers.mode === "ville" && (
+                <>
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Ville à explorer
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-2xl text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                      placeholder="Ex : Tokyo"
+                      onChange={(e) => handleAnswer("ville", e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-2">
+                      Période souhaitée
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-2xl text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                      placeholder="Printemps, automne..."
+                      onChange={(e) =>
+                        handleAnswer("periodeVille", e.target.value)
+                      }
+                    />
+                  </div>
+                </>
+              )}
 
               <div>
                 <label className="block text-gray-700 font-medium mb-2">
@@ -1007,11 +1483,43 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
                 </label>
                 <textarea
                   rows="3"
-                  value={answers.remarques || ""}
-                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-2xl text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none resize-none transition-all duration-200"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-2xl text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                   placeholder="Souhaits, contraintes..."
                   onChange={(e) => handleAnswer("remarques", e.target.value)}
                 />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-4">
+                  Souhaitez-vous une conclusion personnalisée ?
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="conclusion"
+                      value="oui"
+                      onChange={(e) =>
+                        handleAnswer("conclusion", e.target.value)
+                      }
+                      className="mr-2 text-orange-500 focus:ring-orange-500"
+                    />
+                    <span className="text-gray-700">Oui</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="conclusion"
+                      value="non"
+                      defaultChecked
+                      onChange={(e) =>
+                        handleAnswer("conclusion", e.target.value)
+                      }
+                      className="mr-2 text-orange-500 focus:ring-orange-500"
+                    />
+                    <span className="text-gray-700">Non</span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -1027,11 +1535,11 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
               {isLoading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Génération IA en cours...
+                  Génération en cours...
                 </>
               ) : (
                 <>
-                  Générer avec l'IA
+                  Générer mon itinéraire
                   <Zap className="w-5 h-5" />
                 </>
               )}
@@ -1054,7 +1562,8 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
               Bonjour {answers.username || "voyageur"}-san! 👋
             </h1>
             <p className="text-lg text-gray-700 mb-8">
-              Voici votre itinéraire personnalisé par IA au Japon
+              Voici votre itinéraire personnalisé au Japon. Laissez-vous guider,
+              étape par étape…
             </p>
           </div>
 
@@ -1062,20 +1571,27 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
             <div className="text-center my-12">
               <div className="inline-block w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
               <p className="mt-4 text-gray-700 text-lg">
-                L'IA prépare votre itinéraire...
+                Veuillez patienter, nous préparons votre itinéraire...
               </p>
+            </div>
+          )}
+
+          {apiError && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
+              <p className="text-red-700 text-center">{apiError}</p>
             </div>
           )}
 
           {generatedItinerary && !isLoading && (
             <div className="bg-white/90 backdrop-blur border border-gray-200 rounded-3xl p-8 shadow-lg">
-              <div className="prose prose-lg max-w-none">
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: generatedItinerary.replace(/\n/g, "<br/>"),
-                  }}
-                />
-              </div>
+              {getIntroHtmlFromDate(answers.start || answers.periodeVille)}
+
+              <div
+                className="prose prose-lg max-w-none"
+                dangerouslySetInnerHTML={{
+                  __html: formatMarkdownToHTML(generatedItinerary),
+                }}
+              />
 
               <div className="mt-8 text-center border-t border-gray-200 pt-6">
                 <button
@@ -1085,7 +1601,7 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
                       type: "text/plain",
                     });
                     element.href = URL.createObjectURL(file);
-                    element.download = "japan-itinerary-ia.txt";
+                    element.download = "japan-itinerary.txt";
                     document.body.appendChild(element);
                     element.click();
                     document.body.removeChild(element);
@@ -1093,21 +1609,22 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
                   className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-8 py-3 rounded-2xl hover:from-orange-600 hover:to-pink-600 transition-colors flex items-center gap-2 mx-auto font-semibold"
                 >
                   <Download className="w-5 h-5" />
-                  📄 Télécharger l'itinéraire IA
+                  📄 Télécharger l'itinéraire
                 </button>
               </div>
 
-              {/* Section feedback IA */}
+              {/* Section de feedback IA */}
               <div className="mt-6 bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-2xl border border-purple-200">
                 <div className="flex items-center gap-2 mb-3">
                   <Bot className="w-5 h-5 text-purple-600" />
                   <span className="font-semibold text-purple-800">
-                    Analyse IA de votre profil
+                    Feedback de votre assistant IA
                   </span>
                 </div>
                 <p className="text-sm text-purple-700">
-                  Itinéraire optimisé : {answers.style?.join(", ")} •{" "}
-                  {answers.type} • {answers.rythme}
+                  Votre itinéraire a été optimisé selon vos préférences :{" "}
+                  {answers.style?.join(", ")} • {answers.type} •{" "}
+                  {answers.rythme}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {smartSuggestions.slice(0, 3).map((suggestion, index) => (
@@ -1131,14 +1648,21 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
                 setShowResult(false);
                 setGeneratedItinerary("");
                 setIsLoading(false);
+                setApiError("");
                 setChatMessages([]);
                 setSmartSuggestions([]);
                 setAiRecommendations([]);
+                setUserProfile({
+                  preferences: [],
+                  travelStyle: "",
+                  experienceLevel: "",
+                  budget: "",
+                });
               }}
               className="bg-gray-300 text-gray-700 px-8 py-3 rounded-2xl hover:bg-gray-400 transition-colors font-semibold flex items-center gap-2 mx-auto"
             >
               <ArrowLeft className="w-4 h-4" />
-              Nouveau voyage avec IA
+              Créer un nouveau voyage
             </button>
           </div>
         </div>
@@ -1149,7 +1673,7 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(15)].map((_, i) => (
+        {[...Array(20)].map((_, i) => (
           <div
             key={i}
             className="absolute text-orange-300/40 animate-pulse"
@@ -1160,11 +1684,7 @@ Votre itinéraire a été personnalisé selon vos préférences !`;
               animationDelay: `${Math.random() * 5}s`,
             }}
           >
-            {
-              ["🌸", "🏮", "⛩️", "🎋", "🍜", "🤖"][
-                Math.floor(Math.random() * 6)
-              ]
-            }
+            {["🌸", "🏮", "⛩️", "🎋", "🍜"][Math.floor(Math.random() * 5)]}
           </div>
         ))}
       </div>
